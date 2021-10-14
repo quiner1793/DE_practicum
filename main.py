@@ -4,7 +4,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
 
-GRAPH_UPDATE = 100  # time in ms to update graph
+GRAPH_UPDATE = 1000  # time in ms to update graph
 
 
 class Page(tk.Frame):
@@ -15,47 +15,49 @@ class Page(tk.Frame):
         self.lift()
 
 
-def update_graph():
-    plt.clf()  # Clear all graphs drawn in figure
-    plt.plot()  # Draw empty graph
-
-    if original_graph_flag.get():
-        x = [i for i in range(1, 4)]
-        y = [i ** 2 for i in x]
-        plt.plot(x, y)
-
-    fig.canvas.draw()
-    root.after(GRAPH_UPDATE, update_graph)  # Periodic event
-
-
 class Page1(Page):
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
         label = tk.Label(self, text="Page 1")
         label.pack(side="top", fill="both", expand=True)
 
-        fig = plt.figure(1)
+        self.fig = plt.figure(1)
 
-        canvas = FigureCanvasTkAgg(fig, master=self)  # Matplotlib graphing canvas
+        canvas = FigureCanvasTkAgg(self.fig, master=self)  # Matplotlib graphing canvas
         plot_widget = canvas.get_tk_widget()
 
-        plot_widget.pack(side="right")  # Add the plot to the tkinter widget
+        plot_widget.pack(side=RIGHT)  # Add the plot to the tkinter widget
 
         left_frame = Frame(self)
-        left_frame.pack(side="left")
+        left_frame.pack(side=LEFT, fill=Y, expand=False)
 
-        original_graph_flag = tk.BooleanVar()
-        original_graph_flag.set(True)
+        self.original_graph_flag = tk.BooleanVar()
+        self.original_graph_flag.set(True)
         original_graph_button = tk.Checkbutton(left_frame,
                                                text="Original graph",
-                                               variable=original_graph_flag,
+                                               variable=self.original_graph_flag,
                                                onvalue=True,
-                                               offvalue=False).pack(side="top")
+                                               offvalue=False).pack(expand=False)
 
-        y0_text_label = Label(left_frame, width=3, text="y0=").pack(side="left")
-        y0_box = Entry(left_frame, width=5).pack(side="right")
+        y0_frame = Frame(left_frame)
+        y0_frame.pack()
+        y0_text_label = Label(y0_frame, width=3, text="y0=").pack(side="left")
+        y0_box = Entry(y0_frame, width=5).pack(side="left")
 
-        root.after(GRAPH_UPDATE, update_graph)
+        plot_button = tk.Button(left_frame, text="Plot", command=self.update_graph_first_page).pack(expand=False)
+        self.update_graph_first_page()
+
+    def update_graph_first_page(self):
+        plt.clf()  # Clear all graphs drawn in figure
+        plt.plot()  # Draw empty graph
+
+        print(self.original_graph_flag.get())
+        if self.original_graph_flag.get():
+            x = [i for i in range(1, 4)]
+            y = [i ** 2 for i in x]
+            plt.plot(x, y)
+
+        self.fig.canvas.draw()
 
 
 class MainView(tk.Frame):
@@ -95,6 +97,6 @@ if __name__ == '__main__':
 
     main = MainView(root)
     main.pack(side="top", fill="both", expand=True)
-    root.wm_geometry("900x900")
+    root.wm_geometry("800x600")
 
     root.mainloop()
