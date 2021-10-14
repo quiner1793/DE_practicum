@@ -4,7 +4,17 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
 
-GRAPH_UPDATE = 1000  # time in ms to update graph
+DEFAULT_X_ZERO = 1
+LEFT_LIMIT_X_ZERO = -100
+RIGHT_LIMIT_X_ZERO = 100
+DEFAULT_Y_ZERO = 1
+LEFT_LIMIT_Y_ZERO = -100
+RIGHT_LIMIT_Y_ZERO = 100
+DEFAULT_X_LIMIT = 7
+RIGHT_LIMIT_X_LIMIT = 100
+DEFAULT_N = 10
+LEFT_LIMIT_N = 1
+RIGHT_LIMIT_N = 1000
 
 
 class Page(tk.Frame):
@@ -33,27 +43,125 @@ class Page1(Page):
 
         self.original_graph_flag = tk.BooleanVar()
         self.original_graph_flag.set(True)
-        original_graph_button = tk.Checkbutton(left_frame,
-                                               text="Original graph",
-                                               variable=self.original_graph_flag,
-                                               onvalue=True,
-                                               offvalue=False).pack(expand=False)
+        tk.Checkbutton(left_frame,
+                       text="Original graph",
+                       variable=self.original_graph_flag,
+                       onvalue=True,
+                       offvalue=False).pack(expand=False)
+
+        self.runge_kutta_graph_flag = tk.BooleanVar()
+        tk.Checkbutton(left_frame,
+                       text="Runge-Kutta method",
+                       variable=self.runge_kutta_graph_flag,
+                       onvalue=True,
+                       offvalue=False).pack(expand=False)
+
+        self.euler_graph_flag = tk.BooleanVar()
+        tk.Checkbutton(left_frame,
+                       text="Euler method",
+                       variable=self.euler_graph_flag,
+                       onvalue=True,
+                       offvalue=False).pack(expand=False)
+
+        self.improved_euler_graph_flag = tk.BooleanVar()
+        tk.Checkbutton(left_frame,
+                       text="Improved Euler method",
+                       variable=self.improved_euler_graph_flag,
+                       onvalue=True,
+                       offvalue=False).pack(expand=False)
+
+        x0_frame = Frame(left_frame)
+        x0_frame.pack()
+        Label(x0_frame, width=3, text="x0=").pack(side="left")
+        self.x_zero_entry_box = Entry(x0_frame, width=5)
+        self.x_zero_entry_box.pack(side="left")
 
         y0_frame = Frame(left_frame)
         y0_frame.pack()
-        y0_text_label = Label(y0_frame, width=3, text="y0=").pack(side="left")
-        y0_box = Entry(y0_frame, width=5).pack(side="left")
+        Label(y0_frame, width=3, text="y0=").pack(side="left")
+        self.y_zero_entry_box = Entry(y0_frame, width=5)
+        self.y_zero_entry_box.pack(side="left")
 
-        plot_button = tk.Button(left_frame, text="Plot", command=self.update_graph_first_page).pack(expand=False)
+        x_limit_frame = Frame(left_frame)
+        x_limit_frame.pack()
+        Label(x_limit_frame, width=3, text="X=").pack(side="left")
+        self.x_limit_entry_box = Entry(x_limit_frame, width=5)
+        self.x_limit_entry_box.pack(side="left")
+
+        n_frame = Frame(left_frame)
+        n_frame.pack()
+        Label(n_frame, width=3, text="N=").pack(side="left")
+        self.N_entry_box = Entry(n_frame, width=5)
+        self.N_entry_box.pack(side="left")
+
+        tk.Button(left_frame, text="Plot", command=self.update_graph_first_page).pack(expand=False)
         self.update_graph_first_page()
+
+    def get_x_zero_input(self):
+        str_value = self.x_zero_entry_box.get()
+        if str_value == "":
+            return DEFAULT_X_ZERO
+        try:
+            int_value = int(str_value)
+            if not (LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO):
+                return DEFAULT_X_ZERO
+            return int_value
+        except ValueError:
+            print("x0 should be an integer value")
+            return DEFAULT_X_ZERO
+
+    def get_y_zero_input(self):
+        str_value = self.y_zero_entry_box.get()
+        if str_value == "":
+            return DEFAULT_Y_ZERO
+        try:
+            int_value = int(str_value)
+            if not (LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO):
+                return DEFAULT_Y_ZERO
+            return int_value
+        except ValueError:
+            print("y0 should be an integer value")
+            return DEFAULT_Y_ZERO
+
+    def get_x_limit_input(self):
+        str_value = self.x_limit_entry_box.get()
+        if str_value == "":
+            return DEFAULT_X_LIMIT
+        try:
+            int_value = int(str_value)
+            if not (self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT):
+                return DEFAULT_X_LIMIT
+            return int_value
+        except ValueError:
+            print("X should be an integer value")
+            return DEFAULT_X_LIMIT
+
+    def get_n_input(self):
+        str_value = self.N_entry_box.get()
+        if str_value == "":
+            return DEFAULT_N
+        try:
+            int_value = int(str_value)
+            if not (LEFT_LIMIT_N < int_value < RIGHT_LIMIT_N):
+                return DEFAULT_N
+            return int_value
+        except ValueError:
+            print("N should be an integer value")
+            return DEFAULT_N
 
     def update_graph_first_page(self):
         plt.clf()  # Clear all graphs drawn in figure
         plt.plot()  # Draw empty graph
 
-        print(self.original_graph_flag.get())
+        x_zero = self.get_x_zero_input()
+        y_zero = self.get_y_zero_input()
+        x_limit = self.get_x_limit_input()
+        n_steps = self.get_n_input()
+
+        print(x_zero)
+
         if self.original_graph_flag.get():
-            x = [i for i in range(1, 4)]
+            x = [i for i in range(-2, 4)]
             y = [i ** 2 for i in x]
             plt.plot(x, y)
 
