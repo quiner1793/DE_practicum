@@ -190,7 +190,7 @@ class Page1(Page):
         if self.original_graph_flag.get():
             x = np.arange(x_zero, x_limit, ORIGINAL_FUNCTION_STEP)
             y = [get_original_function_output(i, const) for i in x]
-            plt.plot(x, y)
+            plt.plot(x, y, 'b')
 
         if self.euler_graph_flag.get():
             x = np.arange(x_zero, x_limit + h_step, h_step)
@@ -202,7 +202,7 @@ class Page1(Page):
             for i in range(1, len(x)):
                 y.append(y[i - 1] + h_step * get_original_function_slope(x[i - 1], y[i - 1]))  # TODO make as function
 
-            plt.plot(x, y)
+            plt.plot(x, y, 'g')
 
         if self.improved_euler_graph_flag.get():
             x = np.arange(x_zero, x_limit + h_step, h_step)
@@ -216,7 +216,24 @@ class Page1(Page):
                 k2 = h_step * get_original_function_slope(x[i - 1] + h_step, y[i - 1] + k1)
                 y.append(y[i - 1] + (k1 + k2) / 2)
 
-            plt.plot(x, y)
+            plt.plot(x, y, 'r')
+
+        if self.runge_kutta_graph_flag.get():
+            x = np.arange(x_zero, x_limit + h_step, h_step)
+            y = []
+
+            if len(x) > 0:
+                y.append(y_zero)
+
+            for i in range(1, len(x)):
+                k1 = h_step * get_original_function_slope(x[i-1], y[i-1])
+                k2 = h_step * get_original_function_slope(x[i-1] + h_step / 2, y[i-1] + k1 / 2)
+                k3 = h_step * get_original_function_slope(x[i-1] + h_step / 2, y[i-1] + k2 / 2)
+                k4 = h_step * get_original_function_slope(x[i-1] + h_step, y[i-1] + k3)
+
+                y.append(y[i-1] + (k1 + 2*k2 + 2*k3 + k4) / 6)
+
+            plt.plot(x, y, 'm')
 
         self.fig.canvas.draw()
 
