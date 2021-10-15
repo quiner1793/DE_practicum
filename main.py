@@ -19,6 +19,18 @@ RIGHT_LIMIT_N = 1000
 ORIGINAL_FUNCTION_STEP = 0.1
 
 
+def get_range(start, stop, step):
+    x = []
+    temp = start
+    while temp + step < stop:
+        x.append(temp)
+        temp += step
+
+    if temp <= stop:
+        x.append(stop)
+    return x
+
+
 def get_original_function_constant(x0, y0):
     return np.log(y0 + 2 * x0 - 1) - x0
 
@@ -56,6 +68,10 @@ class Page(tk.Frame):
 
     def show(self):
         self.lift()
+        self.update_graph()
+
+    def update_graph(self):
+        raise NotImplementedError()
 
 
 class Page1(Page):
@@ -83,14 +99,6 @@ class Page1(Page):
                        offvalue=False,
                        fg="blue").pack(expand=False)
 
-        self.runge_kutta_graph_flag = tk.BooleanVar()
-        tk.Checkbutton(left_frame,
-                       text="Runge-Kutta method",
-                       variable=self.runge_kutta_graph_flag,
-                       onvalue=True,
-                       offvalue=False,
-                       fg="magenta2").pack(expand=False)
-
         self.euler_graph_flag = tk.BooleanVar()
         tk.Checkbutton(left_frame,
                        text="Euler method",
@@ -106,6 +114,14 @@ class Page1(Page):
                        onvalue=True,
                        offvalue=False,
                        fg="red").pack(expand=False)
+
+        self.runge_kutta_graph_flag = tk.BooleanVar()
+        tk.Checkbutton(left_frame,
+                       text="Runge-Kutta method",
+                       variable=self.runge_kutta_graph_flag,
+                       onvalue=True,
+                       offvalue=False,
+                       fg="magenta2").pack(expand=False)
 
         x0_frame = Frame(left_frame)
         x0_frame.pack()
@@ -131,8 +147,7 @@ class Page1(Page):
         self.N_entry_box = Entry(n_frame, width=5)
         self.N_entry_box.pack(side="left")
 
-        tk.Button(left_frame, text="Plot", command=self.update_graph_first_page).pack(expand=False)
-        self.update_graph_first_page()
+        tk.Button(left_frame, text="Plot", command=self.update_graph).pack(expand=False)
 
     def get_x_zero_input(self):
         str_value = self.x_zero_entry_box.get()
@@ -198,7 +213,8 @@ class Page1(Page):
         self.N_entry_box.insert(0, value_to_return)
         return value_to_return
 
-    def update_graph_first_page(self):
+    def update_graph(self):
+        plt.figure(1)  # Activate figure 1
         plt.clf()  # Clear all graphs drawn in figure
         plt.plot()  # Draw empty graph
 
@@ -210,46 +226,151 @@ class Page1(Page):
 
         const = get_original_function_constant(x_zero, y_zero)
 
+        x1 = get_range(x_zero, x_limit, h_step)
+
         if self.original_graph_flag.get():
-            x = np.arange(x_zero, x_limit, ORIGINAL_FUNCTION_STEP)
-            y = [get_original_function_output(i, const) for i in x]
-            plt.plot(x, y, 'b')
+            x2 = get_range(x_zero, x_limit, ORIGINAL_FUNCTION_STEP)
+            y1 = [get_original_function_output(i, const) for i in x2]
+            plt.plot(x2, y1, 'b')
 
         if self.euler_graph_flag.get():
-            x = np.arange(x_zero, x_limit + h_step, h_step)
-            y = []
+            y2 = []
 
-            if len(x) > 0:
-                y.append(y_zero)  # y(x0) = y0
+            if len(x1) > 0:
+                y2.append(y_zero)  # y(x0) = y0
 
-            for i in range(1, len(x)):
-                y.append(get_euler_method_output(x[i-1], y[i-1], h_step))
+            for i in range(1, len(x1)):
+                y2.append(get_euler_method_output(x1[i-1], y2[i-1], h_step))
 
-            plt.plot(x, y, 'g')
+            plt.plot(x1, y2, 'g')
 
         if self.improved_euler_graph_flag.get():
-            x = np.arange(x_zero, x_limit + h_step, h_step)
-            y = []
+            y3 = []
 
-            if len(x) > 0:
-                y.append(y_zero)  # y(x0) = y0
+            if len(x1) > 0:
+                y3.append(y_zero)  # y(x0) = y0
 
-            for i in range(1, len(x)):
-                y.append(get_improved_euler_method_output(x[i-1], y[i-1], h_step))
+            for i in range(1, len(x1)):
+                y3.append(get_improved_euler_method_output(x1[i-1], y3[i-1], h_step))
 
-            plt.plot(x, y, 'r')
+            plt.plot(x1, y3, 'r')
 
         if self.runge_kutta_graph_flag.get():
-            x = np.arange(x_zero, x_limit + h_step, h_step)
-            y = []
+            y4 = []
+
+            if len(x1) > 0:
+                y4.append(y_zero)
+
+            for i in range(1, len(x1)):
+                y4.append(get_runge_kutta_method_output(x1[i-1], y4[i-1], h_step))
+
+            plt.plot(x1, y4, 'm')
+
+        self.fig.canvas.draw()
+
+
+class Page2(Page):
+    def __init__(self, *args, **kwargs):
+        Page.__init__(self, *args, **kwargs)
+        label = tk.Label(self, text="Page 2")
+        label.pack(side="top", fill="both", expand=True)
+
+        self.fig = plt.figure(2)
+
+        canvas = FigureCanvasTkAgg(self.fig, master=self)  # Matplotlib graphing canvas
+        plot_widget = canvas.get_tk_widget()
+
+        plot_widget.pack(side=RIGHT)  # Add the plot to the tkinter widget
+
+        left_frame = Frame(self)
+        left_frame.pack(side=LEFT, fill=Y, expand=False)
+
+        self.euler_error_flag = tk.BooleanVar()
+        tk.Checkbutton(left_frame,
+                       text="Euler error",
+                       variable=self.euler_error_flag,
+                       onvalue=True,
+                       offvalue=False,
+                       fg="green").pack(expand=False)
+
+        self.improved_euler_error_flag = tk.BooleanVar()
+        tk.Checkbutton(left_frame,
+                       text="Improved Euler error",
+                       variable=self.improved_euler_error_flag,
+                       onvalue=True,
+                       offvalue=False,
+                       fg="red").pack(expand=False)
+
+        self.runge_kutta_error_flag = tk.BooleanVar()
+        tk.Checkbutton(left_frame,
+                       text="Runge-Kutta error",
+                       variable=self.runge_kutta_error_flag,
+                       onvalue=True,
+                       offvalue=False,
+                       fg="magenta2").pack(expand=False)
+
+        tk.Button(left_frame, text="Plot", command=self.update_graph).pack(expand=False)
+
+    def update_graph(self):
+        plt.figure(2)
+        plt.clf()  # Clear all graphs drawn in figure
+        plt.plot()  # Draw empty graph
+
+        x_zero = DEFAULT_X_ZERO
+        y_zero = DEFAULT_Y_ZERO
+        x_limit = DEFAULT_X_LIMIT
+        n_steps = DEFAULT_N
+        h_step = (x_limit - x_zero) / n_steps
+
+        const = get_original_function_constant(x_zero, y_zero)
+
+        x = get_range(x_zero, x_limit, h_step)
+        original_func = [get_original_function_output(i, const) for i in x]
+
+        if self.euler_error_flag.get():
+            y1 = []
+            e1 = []  # error values
 
             if len(x) > 0:
-                y.append(y_zero)
+                y1.append(y_zero)  # y(x0) = y0
 
             for i in range(1, len(x)):
-                y.append(get_runge_kutta_method_output(x[i-1], y[i-1], h_step))
+                y1.append(get_euler_method_output(x[i-1], y1[i-1], h_step))
 
-            plt.plot(x, y, 'm')
+            for i in range(0, len(x)):
+                e1.append(abs(y1[i] - original_func[i]))
+
+            plt.plot(x, e1, 'g')
+
+        if self.improved_euler_error_flag.get():
+            y2 = []
+            e2 = []
+
+            if len(x) > 0:
+                y2.append(y_zero)  # y(x0) = y0
+
+            for i in range(1, len(x)):
+                y2.append(get_improved_euler_method_output(x[i-1], y2[i-1], h_step))
+
+            for i in range(0, len(x)):
+                e2.append(abs(y2[i] - original_func[i]))
+
+            plt.plot(x, e2, 'r')
+
+        if self.runge_kutta_error_flag.get():
+            y3 = []
+            e3 = []
+
+            if len(x) > 0:
+                y3.append(y_zero)
+
+            for i in range(1, len(x)):
+                y3.append(get_runge_kutta_method_output(x[i-1], y3[i-1], h_step))
+
+            for i in range(0, len(x)):
+                e3.append(abs(y3[i] - original_func[i]))
+
+            plt.plot(x, e3, 'm')
 
         self.fig.canvas.draw()
 
@@ -260,8 +381,8 @@ class MainView(tk.Frame):
         tk.Frame.__init__(self, *args, **kwargs)
 
         page1 = Page1(self)
-        page2 = Page(self)  # TODO replace
-        page3 = Page(self)
+        page2 = Page2(self)
+        page3 = Page(self)  # TODO replace
 
         button_frame = tk.Frame(self)
         container = tk.Frame(self)
