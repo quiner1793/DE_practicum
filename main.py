@@ -3,9 +3,10 @@ from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 
 DEFAULT_X_ZERO = 1
-LEFT_LIMIT_X_ZERO = -100
+LEFT_LIMIT_X_ZERO = 0
 RIGHT_LIMIT_X_ZERO = 100
 DEFAULT_Y_ZERO = 1
 LEFT_LIMIT_Y_ZERO = -100
@@ -13,8 +14,21 @@ RIGHT_LIMIT_Y_ZERO = 100
 DEFAULT_X_LIMIT = 7
 RIGHT_LIMIT_X_LIMIT = 100
 DEFAULT_N = 10
-LEFT_LIMIT_N = 1
+LEFT_LIMIT_N = 0
 RIGHT_LIMIT_N = 1000
+ORIGINAL_FUNCTION_STEP = 0.1
+
+
+def get_original_function_constant(x0, y0):
+    return np.log(y0 + 2 * x0 - 1) - x0
+
+
+def get_original_function_output(x, const):
+    return np.exp(x + const) - 2 * x + 1
+
+
+def get_original_function_slope(x, y):
+    return 2 * x + y - 3
 
 
 class Page(tk.Frame):
@@ -99,55 +113,67 @@ class Page1(Page):
 
     def get_x_zero_input(self):
         str_value = self.x_zero_entry_box.get()
-        if str_value == "":
-            return DEFAULT_X_ZERO
-        try:
-            int_value = int(str_value)
-            if not (LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO):
-                return DEFAULT_X_ZERO
-            return int_value
-        except ValueError:
-            print("x0 should be an integer value")
-            return DEFAULT_X_ZERO
+        value_to_return = DEFAULT_X_ZERO
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO:
+                    value_to_return = int_value
+            except ValueError:
+                print("x0 should be an integer value")
+
+        self.x_zero_entry_box.delete(0, END)
+        self.x_zero_entry_box.insert(0, value_to_return)
+        return value_to_return
 
     def get_y_zero_input(self):
         str_value = self.y_zero_entry_box.get()
-        if str_value == "":
-            return DEFAULT_Y_ZERO
-        try:
-            int_value = int(str_value)
-            if not (LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO):
-                return DEFAULT_Y_ZERO
-            return int_value
-        except ValueError:
-            print("y0 should be an integer value")
-            return DEFAULT_Y_ZERO
+        value_to_return = DEFAULT_Y_ZERO
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO:
+                    value_to_return = int_value
+            except ValueError:
+                print("y0 should be an integer value")
+
+        self.y_zero_entry_box.delete(0, END)
+        self.y_zero_entry_box.insert(0, value_to_return)
+        return value_to_return
 
     def get_x_limit_input(self):
         str_value = self.x_limit_entry_box.get()
-        if str_value == "":
-            return DEFAULT_X_LIMIT
-        try:
-            int_value = int(str_value)
-            if not (self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT):
-                return DEFAULT_X_LIMIT
-            return int_value
-        except ValueError:
-            print("X should be an integer value")
-            return DEFAULT_X_LIMIT
+        value_to_return = DEFAULT_X_LIMIT
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT:
+                    value_to_return = int_value
+            except ValueError:
+                print("X should be an integer value")
+
+        self.x_limit_entry_box.delete(0, END)
+        self.x_limit_entry_box.insert(0, value_to_return)
+        return value_to_return
 
     def get_n_input(self):
         str_value = self.N_entry_box.get()
-        if str_value == "":
-            return DEFAULT_N
-        try:
-            int_value = int(str_value)
-            if not (LEFT_LIMIT_N < int_value < RIGHT_LIMIT_N):
-                return DEFAULT_N
-            return int_value
-        except ValueError:
-            print("N should be an integer value")
-            return DEFAULT_N
+        value_to_return = DEFAULT_N
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if LEFT_LIMIT_N < int_value < RIGHT_LIMIT_N:
+                    value_to_return = int_value
+            except ValueError:
+                print("N should be an integer value")
+
+        self.N_entry_box.delete(0, END)
+        self.N_entry_box.insert(0, value_to_return)
+        return value_to_return
 
     def update_graph_first_page(self):
         plt.clf()  # Clear all graphs drawn in figure
@@ -157,12 +183,25 @@ class Page1(Page):
         y_zero = self.get_y_zero_input()
         x_limit = self.get_x_limit_input()
         n_steps = self.get_n_input()
+        h_step = (x_limit - x_zero) / n_steps
 
-        print(x_zero)
+        const = get_original_function_constant(x_zero, y_zero)
 
         if self.original_graph_flag.get():
-            x = [i for i in range(-2, 4)]
-            y = [i ** 2 for i in x]
+            x = np.arange(x_zero, x_limit, ORIGINAL_FUNCTION_STEP)
+            y = [get_original_function_output(i, const) for i in x]
+            plt.plot(x, y)
+
+        if self.euler_graph_flag.get():
+            x = np.arange(x_zero, x_limit + h_step, h_step)
+            y = []
+
+            if len(x) > 0:
+                y.append(y_zero)  # y(x0) = y0
+
+            for i in range(1, len(x)):
+                y.append(y[i - 1] + h_step * get_original_function_slope(x[i - 1], y[i - 1]))
+
             plt.plot(x, y)
 
         self.fig.canvas.draw()
@@ -205,6 +244,6 @@ if __name__ == '__main__':
 
     main = MainView(root)
     main.pack(side="top", fill="both", expand=True)
-    root.wm_geometry("800x600")
+    root.wm_geometry("800x500")
 
     root.mainloop()
