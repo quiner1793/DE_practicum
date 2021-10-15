@@ -200,7 +200,21 @@ class Page1(Page):
                 y.append(y_zero)  # y(x0) = y0
 
             for i in range(1, len(x)):
-                y.append(y[i - 1] + h_step * get_original_function_slope(x[i - 1], y[i - 1]))
+                y.append(y[i - 1] + h_step * get_original_function_slope(x[i - 1], y[i - 1]))  # TODO make as function
+
+            plt.plot(x, y)
+
+        if self.improved_euler_graph_flag.get():
+            x = np.arange(x_zero, x_limit + h_step, h_step)
+            y = []
+
+            if len(x) > 0:
+                y.append(y_zero)  # y(x0) = y0
+
+            for i in range(1, len(x)):
+                k1 = h_step * get_original_function_slope(x[i - 1], y[i - 1])
+                k2 = h_step * get_original_function_slope(x[i - 1] + h_step, y[i - 1] + k1)
+                y.append(y[i - 1] + (k1 + k2) / 2)
 
             plt.plot(x, y)
 
