@@ -31,6 +31,25 @@ def get_original_function_slope(x, y):
     return 2 * x + y - 3
 
 
+def get_euler_method_output(x, y, h_step):
+    return y + h_step * get_original_function_slope(x, y)
+
+
+def get_improved_euler_method_output(x, y, h_step):
+    k1 = h_step * get_original_function_slope(x, y)
+    k2 = h_step * get_original_function_slope(x + h_step, y + k1)
+    return y + (k1 + k2) / 2
+
+
+def get_runge_kutta_method_output(x, y, h_step):
+    k1 = h_step * get_original_function_slope(x, y)
+    k2 = h_step * get_original_function_slope(x + h_step / 2, y + k1 / 2)
+    k3 = h_step * get_original_function_slope(x + h_step / 2, y + k2 / 2)
+    k4 = h_step * get_original_function_slope(x + h_step, y + k3)
+
+    return y + (k1 + 2 * k2 + 2 * k3 + k4) / 6
+
+
 class Page(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
@@ -61,28 +80,32 @@ class Page1(Page):
                        text="Original graph",
                        variable=self.original_graph_flag,
                        onvalue=True,
-                       offvalue=False).pack(expand=False)
+                       offvalue=False,
+                       fg="blue").pack(expand=False)
 
         self.runge_kutta_graph_flag = tk.BooleanVar()
         tk.Checkbutton(left_frame,
                        text="Runge-Kutta method",
                        variable=self.runge_kutta_graph_flag,
                        onvalue=True,
-                       offvalue=False).pack(expand=False)
+                       offvalue=False,
+                       fg="magenta2").pack(expand=False)
 
         self.euler_graph_flag = tk.BooleanVar()
         tk.Checkbutton(left_frame,
                        text="Euler method",
                        variable=self.euler_graph_flag,
                        onvalue=True,
-                       offvalue=False).pack(expand=False)
+                       offvalue=False,
+                       fg="green").pack(expand=False)
 
         self.improved_euler_graph_flag = tk.BooleanVar()
         tk.Checkbutton(left_frame,
                        text="Improved Euler method",
                        variable=self.improved_euler_graph_flag,
                        onvalue=True,
-                       offvalue=False).pack(expand=False)
+                       offvalue=False,
+                       fg="red").pack(expand=False)
 
         x0_frame = Frame(left_frame)
         x0_frame.pack()
@@ -200,7 +223,7 @@ class Page1(Page):
                 y.append(y_zero)  # y(x0) = y0
 
             for i in range(1, len(x)):
-                y.append(y[i - 1] + h_step * get_original_function_slope(x[i - 1], y[i - 1]))  # TODO make as function
+                y.append(get_euler_method_output(x[i-1], y[i-1], h_step))
 
             plt.plot(x, y, 'g')
 
@@ -212,9 +235,7 @@ class Page1(Page):
                 y.append(y_zero)  # y(x0) = y0
 
             for i in range(1, len(x)):
-                k1 = h_step * get_original_function_slope(x[i - 1], y[i - 1])
-                k2 = h_step * get_original_function_slope(x[i - 1] + h_step, y[i - 1] + k1)
-                y.append(y[i - 1] + (k1 + k2) / 2)
+                y.append(get_improved_euler_method_output(x[i-1], y[i-1], h_step))
 
             plt.plot(x, y, 'r')
 
@@ -226,12 +247,7 @@ class Page1(Page):
                 y.append(y_zero)
 
             for i in range(1, len(x)):
-                k1 = h_step * get_original_function_slope(x[i-1], y[i-1])
-                k2 = h_step * get_original_function_slope(x[i-1] + h_step / 2, y[i-1] + k1 / 2)
-                k3 = h_step * get_original_function_slope(x[i-1] + h_step / 2, y[i-1] + k2 / 2)
-                k4 = h_step * get_original_function_slope(x[i-1] + h_step, y[i-1] + k3)
-
-                y.append(y[i-1] + (k1 + 2*k2 + 2*k3 + k4) / 6)
+                y.append(get_runge_kutta_method_output(x[i-1], y[i-1], h_step))
 
             plt.plot(x, y, 'm')
 
