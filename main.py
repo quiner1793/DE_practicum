@@ -13,9 +13,6 @@ LEFT_LIMIT_Y_ZERO = -100
 RIGHT_LIMIT_Y_ZERO = 100
 DEFAULT_X_LIMIT = 7
 RIGHT_LIMIT_X_LIMIT = 100
-DEFAULT_N = 10
-DEFAULT_N_LIMIT = 50
-LEFT_LIMIT_N = 0
 RIGHT_LIMIT_N = 1000
 ORIGINAL_FUNCTION_STEP = 0.1
 
@@ -23,7 +20,7 @@ ORIGINAL_FUNCTION_STEP = 0.1
 def get_range(start, stop, step):
     x = []
     temp = start
-    while temp + step < stop:
+    while temp + step <= stop:
         x.append(temp)
         temp += step
 
@@ -67,12 +64,139 @@ class Page(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
+        self.x_zero_entry_box = None
+        self.y_zero_entry_box = None
+        self.x_limit_entry_box = None
+        self.N_entry_box = None
+        self.n_zero_entry_box = None
+        self.n_limit_entry_box = None
+
     def show(self):
         self.lift()
         self.update_graph()
 
     def update_graph(self):
         raise NotImplementedError()
+
+    def get_x_zero_input(self):
+        str_value = self.x_zero_entry_box.get()
+        value_to_return = DEFAULT_X_ZERO
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO:
+                    value_to_return = int_value
+            except ValueError:
+                print("x0 should be an integer value")
+
+        self.x_zero_entry_box.delete(0, END)
+        self.x_zero_entry_box.insert(0, value_to_return)
+        return value_to_return
+
+    def get_y_zero_input(self):
+        str_value = self.y_zero_entry_box.get()
+        value_to_return = DEFAULT_Y_ZERO
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO:
+                    value_to_return = int_value
+            except ValueError:
+                print("y0 should be an integer value")
+
+        self.y_zero_entry_box.delete(0, END)
+        self.y_zero_entry_box.insert(0, value_to_return)
+        return value_to_return
+
+    def get_x_limit_input(self):
+        str_value = self.x_limit_entry_box.get()
+        value_to_return = DEFAULT_X_LIMIT
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT:
+                    value_to_return = int_value
+            except ValueError:
+                print("X should be an integer value")
+
+        self.x_limit_entry_box.delete(0, END)
+        self.x_limit_entry_box.insert(0, value_to_return)
+        return value_to_return
+
+    def get_n_input(self):
+        str_value = self.N_entry_box.get()
+
+        x_zero = self.get_x_zero_input()
+        x_limit = self.get_x_limit_input()
+        left_limit = x_limit - x_zero
+
+        value_to_return = left_limit
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+
+                if left_limit < int_value < RIGHT_LIMIT_N:
+                    value_to_return = int_value
+            except ValueError:
+                print("N should be an integer value")
+
+        self.N_entry_box.delete(0, END)
+        self.N_entry_box.insert(0, value_to_return)
+        return value_to_return
+
+    def get_n_zero_input(self):
+        str_value = self.n_zero_entry_box.get()
+
+        x_zero = self.get_x_zero_input()
+        x_limit = self.get_x_limit_input()
+        left_limit = x_limit - x_zero
+
+        value_to_return = left_limit
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if left_limit < int_value < RIGHT_LIMIT_N:
+                    value_to_return = int_value
+            except ValueError:
+                print("n0 should be an integer value")
+
+        self.n_zero_entry_box.delete(0, END)
+        self.n_zero_entry_box.insert(0, value_to_return)
+        return value_to_return
+
+    def get_n_limit_input(self):
+        str_value = self.n_limit_entry_box.get()
+
+        value_to_return = self.get_n_zero_input() + 1
+
+        if str_value != "":
+            try:
+                int_value = int(str_value)
+                if value_to_return < int_value < RIGHT_LIMIT_N:
+                    value_to_return = int_value
+            except ValueError:
+                print("N should be an integer value")
+
+        self.n_limit_entry_box.delete(0, END)
+        self.n_limit_entry_box.insert(0, value_to_return)
+        return value_to_return
+
+
+def get_approximation_function_graph(func, x_range, y_zero):
+    y = []
+
+    if len(x_range) > 0:
+        y.append(y_zero)  # y(x0) = y0
+
+    for i in range(1, len(x_range)):
+        y.append(func(x_range[i - 1], y[i - 1], x_range[i] - x_range[i - 1]))
+
+    return y
 
 
 class Page1(Page):
@@ -150,70 +274,6 @@ class Page1(Page):
 
         tk.Button(left_frame, text="Plot", command=self.update_graph).pack(expand=False)
 
-    def get_x_zero_input(self):
-        str_value = self.x_zero_entry_box.get()
-        value_to_return = DEFAULT_X_ZERO
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO:
-                    value_to_return = int_value
-            except ValueError:
-                print("x0 should be an integer value")
-
-        self.x_zero_entry_box.delete(0, END)
-        self.x_zero_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_y_zero_input(self):
-        str_value = self.y_zero_entry_box.get()
-        value_to_return = DEFAULT_Y_ZERO
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO:
-                    value_to_return = int_value
-            except ValueError:
-                print("y0 should be an integer value")
-
-        self.y_zero_entry_box.delete(0, END)
-        self.y_zero_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_x_limit_input(self):
-        str_value = self.x_limit_entry_box.get()
-        value_to_return = DEFAULT_X_LIMIT
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT:
-                    value_to_return = int_value
-            except ValueError:
-                print("X should be an integer value")
-
-        self.x_limit_entry_box.delete(0, END)
-        self.x_limit_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_n_input(self):
-        str_value = self.N_entry_box.get()
-        value_to_return = DEFAULT_N
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_N < int_value < RIGHT_LIMIT_N:
-                    value_to_return = int_value
-            except ValueError:
-                print("N should be an integer value")
-
-        self.N_entry_box.delete(0, END)
-        self.N_entry_box.insert(0, value_to_return)
-        return value_to_return
-
     def update_graph(self):
         plt.figure(1)  # Activate figure 1
         plt.clf()  # Clear all graphs drawn in figure
@@ -227,7 +287,7 @@ class Page1(Page):
 
         const = get_original_function_constant(x_zero, y_zero)
 
-        x1 = get_range(x_zero, x_limit, h_step)
+        x_range = get_range(x_zero, x_limit, h_step)
 
         if self.original_graph_flag.get():
             x2 = get_range(x_zero, x_limit, ORIGINAL_FUNCTION_STEP)
@@ -235,39 +295,37 @@ class Page1(Page):
             plt.plot(x2, y1, 'b')
 
         if self.euler_graph_flag.get():
-            y2 = []
+            euler_graph = get_approximation_function_graph(get_euler_method_output, x_range, y_zero)
 
-            if len(x1) > 0:
-                y2.append(y_zero)  # y(x0) = y0
-
-            for i in range(1, len(x1)):
-                y2.append(get_euler_method_output(x1[i - 1], y2[i - 1], x1[i] - x1[i - 1]))
-
-            plt.plot(x1, y2, 'g')
+            plt.plot(x_range, euler_graph, 'g')
 
         if self.improved_euler_graph_flag.get():
-            y3 = []
+            improved_euler_graph = get_approximation_function_graph(get_improved_euler_method_output, x_range, y_zero)
 
-            if len(x1) > 0:
-                y3.append(y_zero)  # y(x0) = y0
-
-            for i in range(1, len(x1)):
-                y3.append(get_improved_euler_method_output(x1[i - 1], y3[i - 1], x1[i] - x1[i - 1]))
-
-            plt.plot(x1, y3, 'r')
+            plt.plot(x_range, improved_euler_graph, 'r')
 
         if self.runge_kutta_graph_flag.get():
-            y4 = []
+            runge_kutta_graph = get_approximation_function_graph(get_runge_kutta_method_output, x_range, y_zero)
 
-            if len(x1) > 0:
-                y4.append(y_zero)
-
-            for i in range(1, len(x1)):
-                y4.append(get_runge_kutta_method_output(x1[i - 1], y4[i - 1], x1[i] - x1[i - 1]))
-
-            plt.plot(x1, y4, 'm')
+            plt.plot(x_range, runge_kutta_graph, 'm')
 
         self.fig.canvas.draw()
+
+
+def get_error_graph(func, x_range, y_zero,  const):
+    y = []
+    error = []  # error values
+
+    if len(x_range) > 0:
+        y.append(y_zero)  # y(x0) = y0
+
+    for i in range(1, len(x_range)):
+        y.append(func(x_range[i - 1], y[i - 1], x_range[i] - x_range[i - 1]))
+
+    for i in range(0, len(x_range)):
+        error.append(abs(y[i] - get_original_function_output(x_range[i], const)))
+
+    return error
 
 
 class Page2(Page):
@@ -336,70 +394,6 @@ class Page2(Page):
 
         tk.Button(left_frame, text="Plot", command=self.update_graph).pack(expand=False)
 
-    def get_x_zero_input(self):
-        str_value = self.x_zero_entry_box.get()
-        value_to_return = DEFAULT_X_ZERO
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO:
-                    value_to_return = int_value
-            except ValueError:
-                print("x0 should be an integer value")
-
-        self.x_zero_entry_box.delete(0, END)
-        self.x_zero_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_y_zero_input(self):
-        str_value = self.y_zero_entry_box.get()
-        value_to_return = DEFAULT_Y_ZERO
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO:
-                    value_to_return = int_value
-            except ValueError:
-                print("y0 should be an integer value")
-
-        self.y_zero_entry_box.delete(0, END)
-        self.y_zero_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_x_limit_input(self):
-        str_value = self.x_limit_entry_box.get()
-        value_to_return = DEFAULT_X_LIMIT
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT:
-                    value_to_return = int_value
-            except ValueError:
-                print("X should be an integer value")
-
-        self.x_limit_entry_box.delete(0, END)
-        self.x_limit_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_n_input(self):
-        str_value = self.N_entry_box.get()
-        value_to_return = DEFAULT_N
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_N < int_value < RIGHT_LIMIT_N:
-                    value_to_return = int_value
-            except ValueError:
-                print("N should be an integer value")
-
-        self.N_entry_box.delete(0, END)
-        self.N_entry_box.insert(0, value_to_return)
-        return value_to_return
-
     def update_graph(self):
         plt.figure(2)  # Activate figure 2
         plt.clf()  # Clear all graphs drawn in figure
@@ -413,55 +407,47 @@ class Page2(Page):
 
         const = get_original_function_constant(x_zero, y_zero)
 
-        x = get_range(x_zero, x_limit, h_step)
-        original_func = [get_original_function_output(i, const) for i in x]
+        x_range = get_range(x_zero, x_limit, h_step)
 
         if self.euler_error_flag.get():  # TODO compact into one function
-            y1 = []
-            e1 = []  # error values
+            euler_error = get_error_graph(get_euler_method_output, x_range, y_zero, const)
 
-            if len(x) > 0:
-                y1.append(y_zero)  # y(x0) = y0
-
-            for i in range(1, len(x)):
-                y1.append(get_euler_method_output(x[i - 1], y1[i - 1], x[i] - x[i - 1]))
-
-            for i in range(0, len(x)):
-                e1.append(abs(y1[i] - original_func[i]))
-
-            plt.plot(x, e1, 'g')
+            plt.plot(x_range, euler_error, 'g')
 
         if self.improved_euler_error_flag.get():
-            y2 = []
-            e2 = []
+            improved_euler_error = get_error_graph(get_improved_euler_method_output, x_range, y_zero, const)
 
-            if len(x) > 0:
-                y2.append(y_zero)  # y(x0) = y0
-
-            for i in range(1, len(x)):
-                y2.append(get_improved_euler_method_output(x[i - 1], y2[i - 1], x[i] - x[i - 1]))
-
-            for i in range(0, len(x)):
-                e2.append(abs(y2[i] - original_func[i]))
-
-            plt.plot(x, e2, 'r')
+            plt.plot(x_range, improved_euler_error, 'r')
 
         if self.runge_kutta_error_flag.get():
-            y3 = []
-            e3 = []
+            runge_kutta_error = get_error_graph(get_runge_kutta_method_output, x_range, y_zero, const)
 
-            if len(x) > 0:
-                y3.append(y_zero)
-
-            for i in range(1, len(x)):
-                y3.append(get_runge_kutta_method_output(x[i - 1], y3[i - 1], x[i] - x[i - 1]))
-
-            for i in range(0, len(x)):
-                e3.append(abs(y3[i] - original_func[i]))
-
-            plt.plot(x, e3, 'm')
+            plt.plot(x_range, runge_kutta_error, 'm')
 
         self.fig.canvas.draw()
+
+
+def get_max_errors_graph(func, x_zero, x_limit, y_zero, n_zero, n_limit, const):
+    max_errors = [0 for _ in range(n_zero, n_limit)]
+
+    for n in range(n_zero, n_limit):
+        h_step = (x_limit - x_zero) / n
+        j = n - n_zero
+
+        x1 = get_range(x_zero, x_limit, h_step)
+        y1 = []
+
+        if len(x1) > 0:
+            y1.append(y_zero)  # y(x0) = y0
+
+        for i in range(1, len(x1)):
+            y1.append(func(x1[i - 1], y1[i - 1], x1[i] - x1[i - 1]))
+
+        for i in range(0, len(x1)):
+            if (abs(y1[i] - get_original_function_output(x1[i], const))) > max_errors[j]:
+                max_errors[j] = abs(y1[i] - get_original_function_output(x1[i], const))
+
+    return max_errors
 
 
 class Page3(Page):
@@ -536,86 +522,6 @@ class Page3(Page):
 
         tk.Button(left_frame, text="Plot", command=self.update_graph).pack(expand=False)
 
-    def get_x_zero_input(self):
-        str_value = self.x_zero_entry_box.get()
-        value_to_return = DEFAULT_X_ZERO
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO:
-                    value_to_return = int_value
-            except ValueError:
-                print("x0 should be an integer value")
-
-        self.x_zero_entry_box.delete(0, END)
-        self.x_zero_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_y_zero_input(self):
-        str_value = self.y_zero_entry_box.get()
-        value_to_return = DEFAULT_Y_ZERO
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO:
-                    value_to_return = int_value
-            except ValueError:
-                print("y0 should be an integer value")
-
-        self.y_zero_entry_box.delete(0, END)
-        self.y_zero_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_x_limit_input(self):
-        str_value = self.x_limit_entry_box.get()
-        value_to_return = DEFAULT_X_LIMIT
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT:
-                    value_to_return = int_value
-            except ValueError:
-                print("X should be an integer value")
-
-        self.x_limit_entry_box.delete(0, END)
-        self.x_limit_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_n_zero_input(self):
-        str_value = self.n_zero_entry_box.get()
-        value_to_return = DEFAULT_N
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_N < int_value < RIGHT_LIMIT_N:
-                    value_to_return = int_value
-            except ValueError:
-                print("n0 should be an integer value")
-
-        self.n_zero_entry_box.delete(0, END)
-        self.n_zero_entry_box.insert(0, value_to_return)
-        return value_to_return
-
-    def get_n_limit_input(self):
-        str_value = self.n_limit_entry_box.get()
-        value_to_return = DEFAULT_N_LIMIT
-
-        if str_value != "":
-            try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_N < int_value < RIGHT_LIMIT_N:
-                    value_to_return = int_value
-            except ValueError:
-                print("N should be an integer value")
-
-        self.n_limit_entry_box.delete(0, END)
-        self.n_limit_entry_box.insert(0, value_to_return)
-        return value_to_return
-
     def update_graph(self):
         plt.figure(3)  # Activate figure 2
         plt.clf()  # Clear all graphs drawn in figure
@@ -632,43 +538,21 @@ class Page3(Page):
         n_range = get_range(n_zero, n_limit, 1)
 
         if self.euler_errors_flag.get():
-            euler_max_errors = self.get_max_errors_graph(get_euler_method_output, x_zero, x_limit, y_zero, n_zero,
-                                                         n_limit, const)
+            euler_max_errors = get_max_errors_graph(get_euler_method_output, x_zero, x_limit, y_zero, n_zero,
+                                                    n_limit, const)
             plt.plot(n_range, euler_max_errors, 'g')
 
         if self.improved_euler_errors_flag.get():
-            improved_euler_max_errors = self.get_max_errors_graph(get_improved_euler_method_output, x_zero, x_limit,
-                                                                  y_zero, n_zero, n_limit, const)
+            improved_euler_max_errors = get_max_errors_graph(get_improved_euler_method_output, x_zero, x_limit,
+                                                             y_zero, n_zero, n_limit, const)
             plt.plot(n_range, improved_euler_max_errors, 'r')
 
         if self.runge_kutta_errors_flag.get():
-            runge_kutta_max_errors = self.get_max_errors_graph(get_runge_kutta_method_output, x_zero, x_limit,
-                                                               y_zero, n_zero, n_limit, const)
+            runge_kutta_max_errors = get_max_errors_graph(get_runge_kutta_method_output, x_zero, x_limit,
+                                                          y_zero, n_zero, n_limit, const)
             plt.plot(n_range, runge_kutta_max_errors, 'm')
 
         self.fig.canvas.draw()
-
-    def get_max_errors_graph(self, func, x_zero, x_limit, y_zero, n_zero, n_limit, const):
-        max_errors = [0 for _ in range(n_zero, n_limit)]
-
-        for n in range(n_zero, n_limit):
-            h_step = (x_limit - x_zero) / n
-            j = n - n_zero
-
-            x1 = get_range(x_zero, x_limit, h_step)
-            y1 = []
-
-            if len(x1) > 0:
-                y1.append(y_zero)  # y(x0) = y0
-
-            for i in range(1, len(x1)):
-                y1.append(func(x1[i - 1], y1[i - 1], x1[i] - x1[i - 1]))
-
-            for i in range(0, len(x1)):
-                if (abs(y1[i] - get_original_function_output(x1[i], const))) > max_errors[j]:
-                    max_errors[j] = abs(y1[i] - get_original_function_output(x1[i], const))
-
-        return max_errors
 
 
 class MainView(tk.Frame):
