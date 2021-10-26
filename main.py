@@ -1,12 +1,12 @@
+import math
 import tkinter as tk
 from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import matplotlib
-import numpy as np
 
 DEFAULT_X_ZERO = 1
-LEFT_LIMIT_X_ZERO = 0
+LEFT_LIMIT_X_ZERO = -100
 RIGHT_LIMIT_X_ZERO = 100
 DEFAULT_Y_ZERO = 1
 LEFT_LIMIT_Y_ZERO = -100
@@ -30,15 +30,19 @@ def get_range(start, stop, step):
 
 
 def get_original_function_constant(x0, y0):
-    return np.log(y0 + 2 * x0 - 1) - x0
+    if 2*x0 + y0 - 1 == 0:
+        return 0
+    return (2*x0 + y0 - 1) / math.exp(x0)
 
 
 def get_original_function_output(x, const):
-    return np.exp(x + const) - 2 * x + 1
+    output = const * math.exp(x) - 2*x + 1
+    return output
 
 
 def get_original_function_slope(x, y):
-    return 2 * x + y - 3
+    slope = 2 * x + y - 3
+    return slope
 
 
 def get_euler_method_output(x, y, h_step):
@@ -84,11 +88,11 @@ class Page(tk.Frame):
 
         if str_value != "":
             try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_X_ZERO < int_value < RIGHT_LIMIT_X_ZERO:
-                    value_to_return = int_value
+                float_value = float(str_value)
+                if LEFT_LIMIT_X_ZERO < float_value < RIGHT_LIMIT_X_ZERO:
+                    value_to_return = float_value
             except ValueError:
-                print("x0 should be an integer value")
+                print("x0 should be an float value")
 
         self.x_zero_entry_box.delete(0, END)
         self.x_zero_entry_box.insert(0, value_to_return)
@@ -100,11 +104,11 @@ class Page(tk.Frame):
 
         if str_value != "":
             try:
-                int_value = int(str_value)
-                if LEFT_LIMIT_Y_ZERO < int_value < RIGHT_LIMIT_Y_ZERO:
-                    value_to_return = int_value
+                float_value = float(str_value)
+                if LEFT_LIMIT_Y_ZERO < float_value < RIGHT_LIMIT_Y_ZERO:
+                    value_to_return = float_value
             except ValueError:
-                print("y0 should be an integer value")
+                print("y0 should be an float value")
 
         self.y_zero_entry_box.delete(0, END)
         self.y_zero_entry_box.insert(0, value_to_return)
@@ -116,11 +120,11 @@ class Page(tk.Frame):
 
         if str_value != "":
             try:
-                int_value = int(str_value)
-                if self.get_x_zero_input() < int_value < RIGHT_LIMIT_X_LIMIT:
-                    value_to_return = int_value
+                float_value = float(str_value)
+                if self.get_x_zero_input() < float_value < RIGHT_LIMIT_X_LIMIT:
+                    value_to_return = float_value
             except ValueError:
-                print("X should be an integer value")
+                print("X should be an float value")
 
         self.x_limit_entry_box.delete(0, END)
         self.x_limit_entry_box.insert(0, value_to_return)
@@ -133,7 +137,7 @@ class Page(tk.Frame):
         x_limit = self.get_x_limit_input()
         left_limit = x_limit - x_zero
 
-        value_to_return = left_limit
+        value_to_return = int(left_limit)
 
         if str_value != "":
             try:
@@ -155,7 +159,7 @@ class Page(tk.Frame):
         x_limit = self.get_x_limit_input()
         left_limit = x_limit - x_zero
 
-        value_to_return = left_limit
+        value_to_return = int(left_limit)
 
         if str_value != "":
             try:
@@ -172,7 +176,7 @@ class Page(tk.Frame):
     def get_n_limit_input(self):
         str_value = self.n_limit_entry_box.get()
 
-        value_to_return = self.get_n_zero_input() + 1
+        value_to_return = self.get_n_zero_input() + 5
 
         if str_value != "":
             try:
@@ -202,7 +206,7 @@ def get_approximation_function_graph(func, x_range, y_zero):
 class Page1(Page):
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
-        label = tk.Label(self, text="Page 1")
+        label = tk.Label(self, text="Numerical methods")
         label.pack(side="top", fill="both", expand=True)
 
         self.fig = plt.figure(1)
@@ -278,6 +282,7 @@ class Page1(Page):
         plt.figure(1)  # Activate figure 1
         plt.clf()  # Clear all graphs drawn in figure
         plt.plot()  # Draw empty graph
+        plt.grid()  # Grid for plot
 
         x_zero = self.get_x_zero_input()
         y_zero = self.get_y_zero_input()
@@ -297,17 +302,17 @@ class Page1(Page):
         if self.euler_graph_flag.get():
             euler_graph = get_approximation_function_graph(get_euler_method_output, x_range, y_zero)
 
-            plt.plot(x_range, euler_graph, 'g')
+            plt.plot(x_range, euler_graph, '-go')
 
         if self.improved_euler_graph_flag.get():
             improved_euler_graph = get_approximation_function_graph(get_improved_euler_method_output, x_range, y_zero)
 
-            plt.plot(x_range, improved_euler_graph, 'r')
+            plt.plot(x_range, improved_euler_graph, '-ro')
 
         if self.runge_kutta_graph_flag.get():
             runge_kutta_graph = get_approximation_function_graph(get_runge_kutta_method_output, x_range, y_zero)
 
-            plt.plot(x_range, runge_kutta_graph, 'm')
+            plt.plot(x_range, runge_kutta_graph, '-mo')
 
         self.fig.canvas.draw()
 
@@ -331,7 +336,7 @@ def get_error_graph(func, x_range, y_zero,  const):
 class Page2(Page):
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
-        label = tk.Label(self, text="Page 2")
+        label = tk.Label(self, text="LTE")
         label.pack(side="top", fill="both", expand=True)
 
         self.fig = plt.figure(2)
@@ -398,6 +403,7 @@ class Page2(Page):
         plt.figure(2)  # Activate figure 2
         plt.clf()  # Clear all graphs drawn in figure
         plt.plot()  # Draw empty graph
+        plt.grid()  # Grid for plot
 
         x_zero = self.get_x_zero_input()
         y_zero = self.get_y_zero_input()
@@ -409,30 +415,30 @@ class Page2(Page):
 
         x_range = get_range(x_zero, x_limit, h_step)
 
-        if self.euler_error_flag.get():  # TODO compact into one function
+        if self.euler_error_flag.get():
             euler_error = get_error_graph(get_euler_method_output, x_range, y_zero, const)
 
-            plt.plot(x_range, euler_error, 'g')
+            plt.plot(x_range, euler_error, '-go')
 
         if self.improved_euler_error_flag.get():
             improved_euler_error = get_error_graph(get_improved_euler_method_output, x_range, y_zero, const)
 
-            plt.plot(x_range, improved_euler_error, 'r')
+            plt.plot(x_range, improved_euler_error, '-ro')
 
         if self.runge_kutta_error_flag.get():
             runge_kutta_error = get_error_graph(get_runge_kutta_method_output, x_range, y_zero, const)
 
-            plt.plot(x_range, runge_kutta_error, 'm')
+            plt.plot(x_range, runge_kutta_error, '-mo')
 
         self.fig.canvas.draw()
 
 
-def get_max_errors_graph(func, x_zero, x_limit, y_zero, n_zero, n_limit, const):
-    max_errors = [0 for _ in range(n_zero, n_limit)]
+def get_max_errors_graph(func, x_zero, x_limit, y_zero, n_range, const):
+    max_errors = [0 for _ in n_range]
 
-    for n in range(n_zero, n_limit):
+    for n in n_range:
         h_step = (x_limit - x_zero) / n
-        j = n - n_zero
+        j = n - n_range[0]
 
         x1 = get_range(x_zero, x_limit, h_step)
         y1 = []
@@ -453,7 +459,7 @@ def get_max_errors_graph(func, x_zero, x_limit, y_zero, n_zero, n_limit, const):
 class Page3(Page):
     def __init__(self, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
-        label = tk.Label(self, text="Page 3")
+        label = tk.Label(self, text="GTE")
         label.pack(side="top", fill="both", expand=True)
 
         self.fig = plt.figure(3)
@@ -526,6 +532,7 @@ class Page3(Page):
         plt.figure(3)  # Activate figure 2
         plt.clf()  # Clear all graphs drawn in figure
         plt.plot()  # Draw empty graph
+        plt.grid()  # Grid for plot
 
         x_zero = self.get_x_zero_input()
         y_zero = self.get_y_zero_input()
@@ -538,19 +545,18 @@ class Page3(Page):
         n_range = get_range(n_zero, n_limit, 1)
 
         if self.euler_errors_flag.get():
-            euler_max_errors = get_max_errors_graph(get_euler_method_output, x_zero, x_limit, y_zero, n_zero,
-                                                    n_limit, const)
-            plt.plot(n_range, euler_max_errors, 'g')
+            euler_max_errors = get_max_errors_graph(get_euler_method_output, x_zero, x_limit, y_zero, n_range, const)
+            plt.plot(n_range, euler_max_errors, '-go')
 
         if self.improved_euler_errors_flag.get():
             improved_euler_max_errors = get_max_errors_graph(get_improved_euler_method_output, x_zero, x_limit,
-                                                             y_zero, n_zero, n_limit, const)
-            plt.plot(n_range, improved_euler_max_errors, 'r')
+                                                             y_zero, n_range, const)
+            plt.plot(n_range, improved_euler_max_errors, '-ro')
 
         if self.runge_kutta_errors_flag.get():
             runge_kutta_max_errors = get_max_errors_graph(get_runge_kutta_method_output, x_zero, x_limit,
-                                                          y_zero, n_zero, n_limit, const)
-            plt.plot(n_range, runge_kutta_max_errors, 'm')
+                                                          y_zero, n_range, const)
+            plt.plot(n_range, runge_kutta_max_errors, '-mo')
 
         self.fig.canvas.draw()
 
